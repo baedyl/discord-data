@@ -11,6 +11,8 @@ const config = {
     "prefix": "<"
 };
 
+let rolesMap;
+
 
 // UTILITY FUNCTIONS
 // Make directory if it does not exist
@@ -95,6 +97,11 @@ const roles = async (message) => {
 const members = async (message) => {
     console.log(members);
 
+    rolesMap = new Map();
+    message.guild.roles.map(role => {
+        rolesMap.set(role.id, role.name);
+    });
+
     console.log("Opening stream...");
     const csvPath = `./tmp/${message.guild.id}-members.csv`;
     const csvStream = csv.createWriteStream({headers: true});
@@ -107,6 +114,9 @@ const members = async (message) => {
     csvStream.pipe(writeStream);
 
     message.guild.members.map(member => {
+        const rolesNames =  member._roles.map(roleId => {
+            return rolesMap.get(roleId)
+        });
         csvStream.write({
             id: member.user.id,
             nickname: member.nickname,
@@ -114,7 +124,7 @@ const members = async (message) => {
             discriminator: member.user.discriminator,
             bot: member.user.bot,
             joined_timestamp: member.joinedTimestamp,
-            roles: member._roles.join(" "),
+            roles: rolesNames.join(" "),
             server_deaf: member.serverDeaf,
             server_mute: member.serverMute,
             deleted: member.deleted
